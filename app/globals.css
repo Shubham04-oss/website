@@ -14,11 +14,13 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  background: var(--bg-void);
+}
+
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg-void);
   color: var(--text);
   overflow-x: hidden;
 }
@@ -76,4 +78,9 @@ html.lenis body {
     backdrop-filter: blur(28px);
     -webkit-backdrop-filter: blur(28px);
   }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }

@@ -12,28 +12,40 @@ export function BackgroundLoader() {
   useEffect(() => {
     let loadedCount = 0;
     const total = layerOrder.length;
+    let timedOut = false;
 
-    const handlers = layerOrder.map((id, index) => {
+    // Safety timeout: dismiss loader after 15s even if images haven't loaded
+    const timer = setTimeout(() => {
+      timedOut = true;
+      setLoaded(true);
+    }, 15000);
+
+    const advance = () => {
+      if (timedOut) return;
+      loadedCount += 1;
+      setProgress(Math.round((loadedCount / total) * 100));
+      if (loadedCount === total) {
+        setTimeout(() => setLoaded(true), 400);
+      }
+    };
+
+    const handlers = layerOrder.map((id) => {
       const img = new Image();
       img.src = `/${id}.svg`;
-      const onLoad = () => {
-        loadedCount += 1;
-        setProgress(Math.round((loadedCount / total) * 100));
-        if (loadedCount === total) {
-          // small delay so the loader doesn't flash away instantly
-          setTimeout(() => setLoaded(true), 400);
-        }
-      };
+      const onLoad = () => advance();
+      const onError = () => advance();
       img.addEventListener("load", onLoad);
-      // if already cached, load event may not fire; check complete
+      img.addEventListener("error", onError);
       if (img.complete) onLoad();
-      return { img, onLoad };
+      return { img, onLoad, onError };
     });
 
     return () => {
-      handlers.forEach(({ img, onLoad }) =>
-        img.removeEventListener("load", onLoad)
-      );
+      clearTimeout(timer);
+      handlers.forEach(({ img, onLoad, onError }) => {
+        img.removeEventListener("load", onLoad);
+        img.removeEventListener("error", onError);
+      });
     };
   }, []);
 
